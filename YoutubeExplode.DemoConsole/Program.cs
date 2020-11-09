@@ -4,12 +4,9 @@ using YoutubeExplode.DemoConsole.Internal;
 using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.Streams;
 
-namespace YoutubeExplode.DemoConsole
-{
-    public static class Program
-    {
-        public static async Task<int> Main()
-        {
+namespace YoutubeExplode.DemoConsole {
+    public static class Program {
+        public static async Task<int> Main() {
             Console.Title = "YoutubeExplode Demo";
 
             // This demo prompts for video ID and downloads one media stream
@@ -18,24 +15,27 @@ namespace YoutubeExplode.DemoConsole
 
             var youtube = new YoutubeClient();
 
+            string[] args = Environment.GetCommandLineArgs();
+            if (args.Length <= 1) {
+                return 0;
+            }
+            Console.Write("Video Id: " + args[1]);
             // Read the video ID
-            Console.Write("Enter YouTube video ID or URL: ");
-            var videoId = new VideoId(Console.ReadLine());
+            var videoId = new VideoId(args[1]);
 
             // Get media streams & choose the best muxed stream
             var streams = await youtube.Videos.Streams.GetManifestAsync(videoId);
-            var streamInfo = streams.GetMuxed().WithHighestVideoQuality();
-            if (streamInfo == null)
-            {
+            var streamInfo = streams.GetAudioOnly().WithHighestBitrate();
+            if (streamInfo == null) {
                 Console.Error.WriteLine("This videos has no streams");
                 return -1;
             }
 
             // Compose file name, based on metadata
-            var fileName = $"{videoId}.{streamInfo.Container.Name}";
+            var fileName = args[2];
 
             // Download video
-            Console.Write($"Downloading stream: {streamInfo.VideoQualityLabel} / {streamInfo.Container.Name}... ");
+            Console.Write($"Downloading stream: {streamInfo.Bitrate} / {streamInfo.Container.Name}... ");
             using (var progress = new InlineProgress())
                 await youtube.Videos.Streams.DownloadAsync(streamInfo, fileName, progress);
 

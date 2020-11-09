@@ -9,19 +9,19 @@ namespace YoutubeExplode.DemoConsole.Internal
 
         public InlineProgress()
         {
-            _posX = Console.CursorLeft;
-            _posY = Console.CursorTop;
+            _posX = 0;
+            _posY = 0;
         }
 
         public void Report(double progress)
         {
-            Console.SetCursorPosition(_posX, _posY);
+            //Console.SetCursorPosition(_posX, _posY);
             Console.WriteLine($"{progress:P1}");
         }
 
         public void Dispose()
         {
-            Console.SetCursorPosition(_posX, _posY);
+            //Console.SetCursorPosition(_posX, _posY);
             Console.WriteLine("Completed ✓");
         }
     }
