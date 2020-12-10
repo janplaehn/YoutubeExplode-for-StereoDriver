@@ -25,9 +25,13 @@ namespace YoutubeExplode.ReverseEngineering.Responses
             .QuerySelector("meta[property=\"og:url\"]") != null;
 
         public string? TryGetPlayerSourceUrl() => _root
-            .GetElementsByName("player_ias/base")
-            .FirstOrDefault()?
-            .GetAttribute("src")
+            .GetElementsByTagName("script")
+            .Select(e => e.GetAttribute("src"))
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .FirstOrDefault(s =>
+                s.Contains("player_ias", StringComparison.OrdinalIgnoreCase) &&
+                s.EndsWith(".js", StringComparison.OrdinalIgnoreCase)
+            )?
             .Pipe(s => "https://youtube.com" + s);
 
         public long? TryGetVideoLikeCount() => _root
@@ -53,8 +57,18 @@ namespace YoutubeExplode.ReverseEngineering.Responses
             .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s))?
             .NullIfWhiteSpace()?
             .Pipe(Json.Extract)
-            .Pipe(Json.Parse)
+            .Pipe(Json.TryParse)?
             .Pipe(j => new PlayerConfig(j));
+
+        public PlayerResponse? TryGetPlayerResponse() => _root
+            .GetElementsByTagName("script")
+            .Select(e => e.Text())
+            .Select(s => Regex.Match(s, @"var\s+ytInitialPlayerResponse\s*=\s*(\{.*\})").Groups[1].Value)
+            .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s))?
+            .NullIfWhiteSpace()?
+            .Pipe(Json.Extract)
+            .Pipe(Json.TryParse)?
+            .Pipe(j => new PlayerResponse(j));
     }
 
     internal partial class WatchPage
